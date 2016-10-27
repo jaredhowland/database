@@ -1,0 +1,19 @@
+{
+    "name": "jaredhowland/database",
+    "description": "PHP class to help with managing a database. Not currently very useful.",
+    "homepage": "https://github.com/jaredhowland/database",
+    "license": "MIT",
+    "autoload": {
+        "psr-0": {
+            "Database" : "src"
+        }
+    },
+    "authors": [{
+        "name": "Jared Howland",
+        "homepage": "http://jaredhowland.com",
+        "role": "developer"
+    }],
+    "require": {
+        "php": "^7.0"
+    }
+}
