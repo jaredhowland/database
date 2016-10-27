@@ -46,9 +46,16 @@ class Database($host, $user, $password, $database, $dbType = 'mysql')
         } else {
             throw new \Exception('Currently, MySQL (`msyql`) is the only supported database.');
         }
+        // Set options
+        $options = array(
+            PDO::ATTR_PERSISTENT         => true,
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET CHARACTER SET utf8'
+        );
         // Create a new PDO instanace
         try {
-            $this->dbh = new \PDO($dsn, $this->user, $this->pass);
+            $this->dbh = new \PDO($dsn, $this->user, $this->pass, $options);
         } catch (\PDOException $e) {
             $this->error = $e->getMessage();
         }
