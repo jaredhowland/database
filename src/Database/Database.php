@@ -15,47 +15,59 @@ namespace Database;
 /**
  * Database class
  *
- * @param string $host Database host name
- * @param string $user Database username
- * @param string $password Database password
- * @param string $database Name of database to connect to
+
  * @param string $dbType Type of database to connect to. Currently only `mysql` is supported
  * @return null
  */
-class Database($host, $user, $password, $database, $dbType = 'mysql')
+class Database
 {
-    private $host = $host;
-    private $user = $user;
-    private $pass = $password;
-    private $dbname = $database;
+    /** @var string Database host name */
+    private $host;
+    /** @var string Database username */
+    private $user;
+    /** @var string Database password */
+    private $pass;
+    /** @var string Database name */
+    private $dbname;
+    /** @var object Database handle */
     private $dbh;
+    /** @var string Error message */
     private $error;
+    /** @var string Database statement */
     private $stmt;
 
     /**
      * Constructor
      *
+     * @param string $host Database host
+     * @param string $user Database username
+     * @param string $password Database password
+     * @param string $database Name of database to connect to
      * @param string $dbType Currently only `mysql` is supported. Will move to a more flexible model eventually.
      * @return null
      */
-    public function __construct($dbType = 'mysql')
+    public function __construct($host, $user, $password, $database, $dbType = 'mysql')
     {
+        $this->host = $host;
+        $this->user = $user;
+        $this->password = $password;
+        $this->dbname = $database;
         // Set Data Source Name (DSN)
         if ($dbType === 'mysql') {
-            $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname;
+            $dsn = 'mysql:host=' . $host . ';dbname=' . $database;
         } else {
             throw new \Exception('Currently, MySQL (`msyql`) is the only supported database.');
         }
         // Set options
         $options = array(
-            PDO::ATTR_PERSISTENT         => true,
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET CHARACTER SET utf8'
+            \PDO::ATTR_PERSISTENT         => true,
+            \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
+            \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+            \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET CHARACTER SET utf8'
         );
         // Create a new PDO instanace
         try {
-            $this->dbh = new \PDO($dsn, $this->user, $this->pass, $options);
+            $this->dbh = new \PDO($dsn, $user, $password, $options);
         } catch (\PDOException $e) {
             $this->error = $e->getMessage();
         }
