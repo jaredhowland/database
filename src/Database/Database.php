@@ -171,6 +171,18 @@ class Database
     }
 
     /**
+     * Select a column
+     *
+     * @param int $columnNumber Number of column to select
+     *
+     * @return null
+     */
+     public function column($columnNumber) {
+        $this->execute();
+        return $this->stmt->fetchColumn($columnNumber);
+     }
+
+    /**
      * Count the number of rows returned by the query
      *
      * @param null
