@@ -220,12 +220,6 @@ class Database
         return $this;
     }
 
-    // public function into($params)
-    // {
-    //     $this->action .= ' INTO '.$params;
-    //     return $this;
-    // }
-
     public function intoOutfile($file)
     {
         $this->action .= ' INTO OUTFILE '.$file;
@@ -350,15 +344,20 @@ class Database
         exec('mysqldump --user='.$this->username.' --password='.$this->password.' --host='.$this->host.' '.$this->dbName.' > '.$file);
     }
 
+    public function backup($file)
+    {
+        $this->mysqldump($file);
+    }
+
     public function sqlRef()
     {
         echo '<br/><pre>';
-        echo "SELECT `column1`, `column2` FROM `table` WHERE `column1` = 'value' GROUP BY `column1` ORDER BY `column2` LIMIT 2\n";
-        echo "INSERT INTO `table` (`column1`, `column2`) VALUES (`value1`, `value2`) ON DUPLICATE KEY UPDATE `column1` = 'value'\n";
-        echo "REPLACE INTO `table` (`column1`, `column2`) VALUES ('value1', 'value2')\n";
-        echo "DELETE FROM `table` WHERE `column` = 'value' ORDER BY `column` LIMIT 2\n";
-        echo "UPDATE `table` SET `column1` = 'value1', `column2` = 'value2' WHERE `column1` = 'value1' ORDER BY `column2` LIMIT 2\n";
-        echo "SELECT `column` FROM `table1` LEFT JOIN (`table2`, `table3`) ON (`table2`.`column` = `table1`.`column` AND `table3`.`column` = `table1`.`column`)\n";
+        echo "SELECT:\nSELECT `column1`, `column2` FROM `table` WHERE `column1` = 'value' GROUP BY `column1` ORDER BY `column2` LIMIT 2\n\n";
+        echo "INSERT:\nINSERT INTO `table` (`column1`, `column2`) VALUES (`value1`, `value2`) ON DUPLICATE KEY UPDATE `column1` = 'value'\n\n";
+        echo "REPLACE:\nREPLACE INTO `table` (`column1`, `column2`) VALUES ('value1', 'value2')\n\n";
+        echo "DELETE:\nDELETE FROM `table` WHERE `column` = 'value' ORDER BY `column` LIMIT 2\n\n";
+        echo "UPDATE:\nUPDATE `table` SET `column1` = 'value1', `column2` = 'value2' WHERE `column1` = 'value1' ORDER BY `column2` LIMIT 2\n\n";
+        echo "LEFT JOINT:\nSELECT `column` FROM `table1` LEFT JOIN (`table2`, `table3`) ON (`table2`.`column` = `table1`.`column` AND `table3`.`column` = `table1`.`column`)";
         echo '</pre><br/>';
     }
 
