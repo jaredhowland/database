@@ -1,6 +1,6 @@
 {
-    "name": "jaredhowland/database",
-    "description": "PHP class to help with managing a database. Not currently very useful.",
+    "name": "jaredhowland/simple-pdo-wrapper",
+    "description": "A simple PDO wrapper for accessing MySQL and SQLite databases.",
     "homepage": "https://github.com/jaredhowland/database",
     "license": "MIT",
     "autoload": {

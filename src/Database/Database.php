@@ -1,286 +1,364 @@
 <?php
 /**
-  * Database class
+  * Database wrapper for PDO
   *
-  * Right now this thing is not too useful but I hope to change that some time soon-ish.
-  *
-  * @link http://culttt.com/2012/10/01/roll-your-own-pdo-php-class/ Based on this post
   * @author  Jared Howland <database@jaredhowland.com>
-  * @version 2016-10-27
-  * @since 2016-10-27
+  * @version 2017-03-17
+  * @since 2017-03-16
   */
 
 namespace Database;
 
 /**
  * Database class
- *
-
- * @param string $dbType Type of database to connect to. Currently only `mysql` is supported
- * @return null
  */
 class Database
 {
-    /** @var string Database host name */
+    private $driver;
     private $host;
-    /** @var string Database username */
-    private $user;
-    /** @var string Database password */
-    private $pass;
-    /** @var string Database name */
-    private $dbname;
-    /** @var object Database handle */
-    private $dbh;
-    /** @var string Error message */
-    private $error;
-    /** @var string Database statement */
-    private $stmt;
+    private $port;
+    private $dbName;
+    private $unixSocket;
+    private $charset;
+    private $dbPath;
+    private $username;
+    private $password;
+    private $options;
+
+    private $dsn;
+    private $db;
+
+    private $action;
+    private $bind;
+    private $result;
 
     /**
-     * Constructor
+     * Define the database driver to use.
      *
-     * @param string $host Database host
-     * @param string $user Database username
-     * @param string $password Database password
-     * @param string $database Name of database to connect to
-     * @param string $dbType Currently only `mysql` is supported. Will move to a more flexible model eventually.
-     * @return null
+     * @param string $driver Optional. Defines the database driver to use. Default: `mysql`. Valid options: `mysql`, `sqlite`.
+     *
+     * @throws Exception if an invalid driver is used.
+     *
+     * @return $this
      */
-    public function __construct($host, $user, $password, $database, $dbType = 'mysql')
+    public function driver($driver = 'mysql')
+    {
+        if ($driver == 'mysql' OR $driver == 'sqlite') {
+            $this->driver = $driver;
+            return $this;
+        } else {
+            throw new \Exception("This class only supports two drivers: `mysql` and `sqlite`");
+        }
+    }
+
+    public function host($host = 'localhost')
     {
         $this->host = $host;
-        $this->user = $user;
-        $this->password = $password;
-        $this->dbname = $database;
-        // Set Data Source Name (DSN)
-        if ($dbType === 'mysql') {
-            $dsn = 'mysql:host=' . $host . ';dbname=' . $database;
+        return $this;
+    }
+
+    public function port($port)
+    {
+        if (($port >=0 AND $port <= 1024) OR is_null($port)) {
+            $this->port = $port;
+            return $this;
         } else {
-            throw new \Exception('Currently, MySQL (`msyql`) is the only supported database.');
-        }
-        // Set options
-        $options = array(
-            \PDO::ATTR_PERSISTENT         => true,
-            \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
-            \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-            \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET CHARACTER SET utf8'
-        );
-        // Create a new PDO instanace
-        try {
-            $this->dbh = new \PDO($dsn, $user, $password, $options);
-        } catch (\PDOException $e) {
-            $this->error = $e->getMessage();
+            throw new \Exception("Invalid port number. Must be `null` or an integer ranging between 0 and 1024.");
         }
     }
 
-    /**
-     * Destructor
-     *
-     * @param null
-     * @return null
-     */
-    public function __destruct()
+    public function dbName($dbName)
     {
-        $this->dbh = null;
+        $this->dbName = $dbName;
+        return $this;
     }
 
-    /**
-     * Prepare the SQL query
-     *
-     * @param string $query Query to run
-     * @return null
-     */
-    public function query($query)
+    public function unixSocket($unixSocket)
     {
-        $this->stmt = $this->dbh->prepare($query);
+        $this->unixSocket = $unixSocket;
+        return $this;
     }
 
-    /**
-     * Bind parameters to query
-     *
-     * @param string $param Named parameter to bind
-     * @param string $value Value to bind
-     * @return null
-     */
-    public function bind($param, $value, $type = null)
+    public function charset($charset = 'utf8')
     {
-        if (empty($type)) {
-            switch(true) {
-                case is_int($value):
-                    $type = \PDO::PARAM_INT;
-                    break;
-                case is_bool($value):
-                    $type = \PDO::PARAM_BOOL;
-                    break;
-                case is_null($value):
-                    $type = \PDO::PARAM_NULL;
-                    break;
-                default:
-                    $type = \PDO::PARAM_STR;
+        $this->charset = $charset;
+        return $this;
+    }
+
+    public function dbPath($dbPath)
+    {
+        if (file_exists($dbPath) OR $dbPath == ':memory:') {
+            $this->dbPath = $dbPath;
+            return $this;
+        } else {
+            throw new \Exception("You have entered an invalid path (`$dbPath`) to the database file.");
+        }
+    }
+
+    public function username($username)
+    {
+        $this->username = $username;
+        return $this;
+    }
+
+    public function password($password)
+    {
+        $this->password = $password;
+        return $this;
+    }
+
+    public function options($options)
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    public function connect()
+    {
+        if ($this->driver == 'sqlite') {
+            $this->dsn = $this->driver.':'.$this->dbPath;
+        } else {
+            if ($this->unixSocket) {
+                $this->dsn = $this->driver.':unix_socket='.$this->unixSocket.'dbname='.$this->dbName;
+            } else {
+                $port = empty($this->port) ? null : ';port='.$this->port;
+                $this->dsn = $this->driver.':host='.$this->host.$port.';dbname='.$this->dbName;
             }
         }
-        $this->stmt->bindValue($param, $value, $type);
+        $this->createPdo();
+        return $this;
     }
 
-    /**
-     * Bind multiple parameters to a query using an array
-     *
-     * @param array $paramArray Array of parameters ('key' => $value)
-     * @return null
-     */
-    public function bindArray($paramArray)
+    private function createPdo()
     {
-        foreach($paramArray as $param => $value) {
-            $this->bind($param, $value);
+        if ($this->username AND $this->password AND $this->options) {
+            $this->db = new \PDO($this->dsn, $this->username, $this->password, $this-options);
+        } else if ($this->username AND $this->password) {
+            $this->db = new \PDO($this->dsn, $this->username, $this->password);
+        } else {
+            $this->db = new \PDO($this->dsn);
         }
     }
 
-    /**
-     * Execute the query
-     *
-     * @param null
-     * @return null
-     */
-    public function execute()
+    public function query($query)
     {
-        return $this->stmt->execute();
-    }
-
-    /**
-     * Fetch all the results as an associative array
-     *
-     * @param null
-     * @return
-     */
-    public function resultset()
-    {
+        $this->action = $query;
         $this->execute();
-        return $this->stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Fetch a single result
-     *
-     * @param null
-     * @return null
-     */
-    public function single()
+    public function select(...$columns)
     {
-        $this->execute();
-        return $this->stmt->fetch(\PDO::FETCH_ASSOC);
+        $columns = implode(',', $columns);
+        $this->action .= ' SELECT '.$columns;
+        return $this;
     }
 
-    /**
-     * Select a column
-     *
-     * @param int $columnNumber Number of column to select
-     *
-     * @return null
-     */
-     public function column($columnNumber) {
-        $this->execute();
-        return $this->stmt->fetchColumn($columnNumber);
-     }
-
-    /**
-     * Count the number of rows returned by the query
-     *
-     * @param null
-     * @return null
-     */
-    public function rowCount()
+    public function from($table)
     {
-        return $this->stmt->rowCount();
+        $this->action .= ' FROM '.$table;
+        return $this;
     }
 
-    /**
-     * Get the last inserted `id`
-     *
-     * @param null
-     * @return null
-     */
-    public function lastInsertId()
+    public function where($where)
     {
-        return $this->dbh->lastInsertId();
+        $this->action .= ' WHERE '.$where;
+        return $this;
     }
 
-    /**
-     * Begin a transaction
-     *
-     * @param null
-     * @return null
-     */
-    public function beginTransaction()
+    public function groupBy(...$groupBy)
     {
-        return $this->dbh->beginTransaction();
+        $groupBy = implode(',', $groupBy);
+        $this->action .= ' GROUP BY '.$groupBy;
+        return $this;
     }
 
-    /**
-     * Commit a transaction
-     *
-     * @param null
-     * @return null
-     */
-    public function endTransaction()
+    public function orderBy($orderBy)
     {
-        return $this->dbh->commit();
+        $orderBy = is_array($orderBy) ? implode(',', $orderBy) : $orderBy;
+        $this->action .= ' ORDER BY '.$orderBy;
+        return $this;
     }
 
-    /**
-     * Cancel a transaction
-     *
-     * @param null
-     * @return null
-     */
-    public function cancelTransaction()
+    public function limit($limit)
     {
-        return $this->dbh->rollBack();
+        $this->action .= ' LIMIT '.$limit;
+        return $this;
     }
 
-    /**
-     * Dump debug information about the query
-     *
-     * @param null
-     * @return null
-     */
-    public function debugDumpParams()
+    public function bind(...$bindArray) {
+        foreach ($bindArray as $key => $value) {
+            $this->bind[$key] = $value;
+        }
+        return $this;
+    }
+
+    public function execute() {
+        print_r($this->action);
+        $db = $this->db->prepare($this->action);
+        $db->execute();
+    }
+
+    public function fetch($type = \PDO::FETCH_ASSOC)
     {
-        return $this->stmt->debugDumpParams();
+        $db = $this->db->prepare($this->action);
+        $db->execute($this->bind[0]);
+        $this->result = $db->fetch($type);
+        return $this->result;
     }
 
-    /**
-     * Truncate the table
-     *
-     * @param string $table Name of table to truncate
-     * @return null
-     */
+    public function fetchAll($type = \PDO::FETCH_ASSOC)
+    {
+        $db = $this->db->prepare($this->action);
+        $db->execute($this->bind[0]);
+        $this->result = $db->fetchAll($type);
+        return $this->result;
+    }
+
+    public function insert($table)
+    {
+        $this->action .= ' INSERT INTO '.$table;
+        return $this;
+    }
+
+    public function intoOutfile($file)
+    {
+        $this->action .= ' INTO OUTFILE '.$file;
+        return $this;
+    }
+
+    public function columns(...$columns)
+    {
+        $columns = implode(',', $columns);
+        $this->action .= ' ('.$columns.')';
+        return $this;
+    }
+
+    public function values(...$values)
+    {
+        $values = implode(',', $values);
+        $this->action .= ' VALUES ('.$values.')';
+        return $this;
+    }
+
+    public function onDuplicateKeyUpdate($params)
+    {
+        $this->action .= ' ON DUPLICATE KEY UPDATE '.$params;
+        return $this;
+    }
+
+    public function update($table)
+    {
+        $this->action .= ' UPDATE '.$table;
+        return $this;
+    }
+
+    public function set(...$columns)
+    {
+        $columns = implode(',', $columns);
+        $this->action .= ' SET '.$columns;
+        return $this;
+    }
+
+    public function delete($table)
+    {
+        $this->action .= ' DELETE FROM '.$table;
+        return $this;
+    }
+
+    public function loadDataInfile($file)
+    {
+        $this->action .= ' LOAD DATA INFILE '.$file;
+        return $this;
+    }
+
+    public function characterSet($characterSet)
+    {
+        $this->action .= ' CHARACTER SET '.$characterSet;
+        return $this;
+    }
+
+    public function fieldsTerminatedBy($fieldsTerminatedBy)
+    {
+        $this->action .= ' FIELDS TERMINATED BY '.$fieldsTerminatedBy;
+        return $this;
+    }
+
+    public function linesTerminatedBy($linesTerminatedBy)
+    {
+        $this->action .= ' LINES TERMINATED BY '.$linesTerminatedBy;
+        return $this;
+    }
+
+    public function enclosedBy($enclosedBy, $optionally = false)
+    {
+        $optionally = $optionally ? ' OPTIONALLY' : null;
+        $this->action .= $optionally.' ENCLOSED BY '.$enclosedBy;
+        return $this;
+    }
+
+    public function escapedBy($escapedBy)
+    {
+        $this->action .= ' ESCAPED BY '.$escapedBy;
+        return $this;
+    }
+
+    public function startingBy($startingBy)
+    {
+        $this->action .= ' STARTING BY '.$startingBy;
+        return $this;
+    }
+
+    // int
+    public function ignore($lines)
+    {
+        $this->action .= ' IGNORE '.$lines.' LINES';
+        return $this;
+    }
+
+    public function replace($table)
+    {
+        $this->action .= ' REPLACE INTO '.$table;
+        return $this;
+    }
+
+    public function leftJoin($tables)
+    {
+        $this->action .= ' LEFT JOIN ('.$tables.')';
+        return $this;
+    }
+
+    public function on($tables)
+    {
+        $this->action .= ' ON ('.$tables.')';
+        return $this;
+    }
+
     public function truncate($table)
     {
-        $this->query("TRUNCATE TABLE $table");
-        $this->execute();
+        $this->action .= 'TRUNCATE TABLE '.$table;
+        return $this;
     }
 
-    /**
-     * Disable foreign key constraints
-     *
-     * @param null
-     * @return null
-     */
-    public function disableConstraints()
+    public function mysqldump($file)
     {
-        $this->query("SET FOREIGN_KEY_CHECKS = 0");
-        $this->execute();
+        exec('mysqldump --user='.$this->username.' --password='.$this->password.' --host='.$this->host.' '.$this->dbName.' > '.$file);
     }
 
-    /**
-     * Enable foreign key constraints
-     *
-     * @param null
-     * @return null
-     */
-    public function enableConstraints()
+    public function backup($file)
     {
-        $this->query("SET FOREIGN_KEY_CHECKS = 1");
-        $this->execute();
+        $this->mysqldump($file);
     }
+
+    public function sqlRef()
+    {
+        echo '<br/><pre>';
+        echo "SELECT:\nSELECT `column1`, `column2` FROM `table` WHERE `column1` = 'value' GROUP BY `column1` ORDER BY `column2` LIMIT 2\n\n";
+        echo "INSERT:\nINSERT INTO `table` (`column1`, `column2`) VALUES (`value1`, `value2`) ON DUPLICATE KEY UPDATE `column1` = 'value'\n\n";
+        echo "REPLACE:\nREPLACE INTO `table` (`column1`, `column2`) VALUES ('value1', 'value2')\n\n";
+        echo "DELETE:\nDELETE FROM `table` WHERE `column` = 'value' ORDER BY `column` LIMIT 2\n\n";
+        echo "UPDATE:\nUPDATE `table` SET `column1` = 'value1', `column2` = 'value2' WHERE `column1` = 'value1' ORDER BY `column2` LIMIT 2\n\n";
+        echo "LEFT JOINT:\nSELECT `column` FROM `table1` LEFT JOIN (`table2`, `table3`) ON (`table2`.`column` = `table1`.`column` AND `table3`.`column` = `table1`.`column`)";
+        echo '</pre><br/>';
+    }
+
 }
