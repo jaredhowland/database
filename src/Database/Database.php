@@ -115,8 +115,8 @@ class Database
 
     public function connect()
     {
-        $this->driver = empty($this->driver) ? $this->driver() : $this->driver;
-        $this->host = empty($this->host) ? $this->host() : $this->host;
+        empty($this->driver) ? $this->driver() : $this->driver;
+        empty($this->host) ? $this->host() : $this->host;
         if ($this->driver == 'sqlite') {
             $this->dsn = $this->driver.':'.$this->dbPath;
         } else {
