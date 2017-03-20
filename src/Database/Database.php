@@ -3,7 +3,7 @@
   * Database wrapper for PDO
   *
   * @author  Jared Howland <database@jaredhowland.com>
-  * @version 2017-03-17
+  * @version 2017-03-20
   * @since 2017-03-16
   */
 
@@ -193,15 +193,15 @@ class Database
     }
 
     public function execute() {
-        print_r($this->action);
         $db = $this->db->prepare($this->action);
-        $db->execute();
+        $db->execute($this->bind[0]);
+        $this->action = null;
     }
 
     public function fetch($type = \PDO::FETCH_ASSOC)
     {
         $db = $this->db->prepare($this->action);
-        $db->execute($this->bind[0]);
+        $db->execute();
         $this->result = $db->fetch($type);
         return $this->result;
     }
@@ -209,7 +209,7 @@ class Database
     public function fetchAll($type = \PDO::FETCH_ASSOC)
     {
         $db = $this->db->prepare($this->action);
-        $db->execute($this->bind[0]);
+        $db->execute();
         $this->result = $db->fetchAll($type);
         return $this->result;
     }
