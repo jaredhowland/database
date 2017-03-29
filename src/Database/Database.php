@@ -212,6 +212,7 @@ class Database
     {
         $db = $this->db->prepare($this->action);
         $db->execute();
+        $this->action = null;
         $this->result = $db->fetchAll($type);
         return $this->result;
     }
