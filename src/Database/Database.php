@@ -3,7 +3,7 @@
   * Database wrapper for PDO
   *
   * @author  Jared Howland <database@jaredhowland.com>
-  * @version 2017-03-20
+  * @version 2017-03-29
   * @since 2017-03-16
   */
 
@@ -204,6 +204,7 @@ class Database
     {
         $db = $this->db->prepare($this->action);
         $db->execute();
+        $this->action = null;
         $this->result = $db->fetch($type);
         return $this->result;
     }
