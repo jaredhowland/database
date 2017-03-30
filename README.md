@@ -2,6 +2,12 @@
 
 A simple PDO-wrapper for accessing MySQL and SQLite databases.
 
+# Installation
+
+Install with composer:
+
+`$ composer require jaredhowland/simple-pdo-wrapper:~1.0`
+
 # Examples
 
 Here are a few examples of how to use this wrapper. More comprehensive documentation is coming later (hopefully).
