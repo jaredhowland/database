@@ -51,37 +51,71 @@ class Database
         }
     }
 
+    /**
+     * Define the database host name.
+     *
+     * @param string $host Optional. Defines the database host name driver to use. Default: `localhost`.
+     *
+     * @throws Exception if `$host` is not a string.
+     *
+     * @return $this
+     */
     public function host($host = 'localhost')
     {
-        $this->host = $host;
+        $this->host = $this->validateString($host, 'Database host name');
         return $this;
     }
 
-    public function port($port)
+    /**
+     * Define the database port to use.
+     *
+     * @param int $port Optional. Defines the database port number to use. Default: `null`. Valid options: `null`, any integer from `0` to `1024` inclusive.
+     *
+     * @throws Exception if an invalid port number is used.
+     *
+     * @return $this
+     */
+    public function port($port = null)
     {
         if (($port >=0 AND $port <= 1024) OR is_null($port)) {
             $this->port = $port;
             return $this;
         } else {
-            throw new \Exception("Invalid port number. Must be `null` or an integer ranging between 0 and 1024.");
+            throw new \Exception("Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.");
         }
     }
 
+    /**
+     * Define the database name to use.
+     *
+     * @param string $dbName Defines the database name to use.
+     *
+     * @throws Exception if `$dbName` is not a string.
+     *
+     * @return $this
+     */
     public function dbName($dbName)
     {
-        $this->dbName = $dbName;
+        $this->dbName = $this->validateString($dbName, 'Database name');
         return $this;
     }
 
-    public function unixSocket($unixSocket)
+    /**
+     * Define the Unix socket to use.
+     *
+     * @param string $unixSocket Optional. Defines the Unix socket to use. Default: `null`.
+     *
+     * @return $this
+     */
+    public function unixSocket($unixSocket = null)
     {
-        $this->unixSocket = $unixSocket;
+        $this->unixSocket = $this->validateString($unixSocket, 'Unix socket');
         return $this;
     }
 
     public function charset($charset = 'utf8')
     {
-        $this->charset = $charset;
+        $this->charset = $this->validateString($charset, 'charset');
         return $this;
     }
 
@@ -97,19 +131,19 @@ class Database
 
     public function username($username)
     {
-        $this->username = $username;
+        $this->username = $this->validateString($username, 'Username');
         return $this;
     }
 
     public function password($password)
     {
-        $this->password = $password;
+        $this->password = $this->validateString($password, 'Password');
         return $this;
     }
 
     public function options($options)
     {
-        $this->options = $options;
+        $this->options = $this->validateString($options, 'Options');
         return $this;
     }
 
@@ -144,25 +178,28 @@ class Database
 
     public function query($query)
     {
-        $this->action = $query;
+        $this->action = $this->validateString($query, 'Query statement');
         $this->execute();
     }
 
     public function select(...$columns)
     {
         $columns = implode(',', $columns);
+        $columns = $this->validateString($columns, '`SELECT` statement');
         $this->action .= ' SELECT '.$columns;
         return $this;
     }
 
     public function from($table)
     {
+        $table = $this->validateString($table, '`FROM` table name');
         $this->action .= ' FROM '.$table;
         return $this;
     }
 
     public function where($where)
     {
+        $where = $this->validateString($where, '`WHERE` statement');
         $this->action .= ' WHERE '.$where;
         return $this;
     }
@@ -170,6 +207,7 @@ class Database
     public function groupBy(...$groupBy)
     {
         $groupBy = implode(',', $groupBy);
+        $groupBy = $this->validateString($groupBy, '`GROUP BY` statement');
         $this->action .= ' GROUP BY '.$groupBy;
         return $this;
     }
@@ -177,12 +215,14 @@ class Database
     public function orderBy($orderBy)
     {
         $orderBy = is_array($orderBy) ? implode(',', $orderBy) : $orderBy;
+        $orderBy = $this->validateString($orderBy, '`ORDER BY` statement');
         $this->action .= ' ORDER BY '.$orderBy;
         return $this;
     }
 
     public function limit($limit)
     {
+        $limit = $this->validateString($limit, '`LIMIT` statement');
         $this->action .= ' LIMIT '.$limit;
         return $this;
     }
@@ -220,12 +260,14 @@ class Database
 
     public function insert($table)
     {
+        $table = $this->validateString($table, '`INSERT` table name');
         $this->action .= ' INSERT INTO '.$table;
         return $this;
     }
 
     public function intoOutfile($file)
     {
+        $file = $this->validateString($file, '`INTO OUTFILE` file name');
         $this->action .= ' INTO OUTFILE '.$file;
         return $this;
     }
@@ -233,6 +275,7 @@ class Database
     public function columns(...$columns)
     {
         $columns = implode(',', $columns);
+        $columns = $this->validateString($columns, 'Column statement');
         $this->action .= ' ('.$columns.')';
         return $this;
     }
@@ -240,18 +283,21 @@ class Database
     public function values(...$values)
     {
         $values = implode(',', $values);
+        $values = $this->validateString($value, 'Values statement');
         $this->action .= ' VALUES ('.$values.')';
         return $this;
     }
 
     public function onDuplicateKeyUpdate($params)
     {
+        $params = $this->validateString($params, '`ON DUPLICATE KEY UPDATE` parameters');
         $this->action .= ' ON DUPLICATE KEY UPDATE '.$params;
         return $this;
     }
 
     public function update($table)
     {
+        $table = $this->validateString($table, '`UPDATE` table name');
         $this->action .= ' UPDATE '.$table;
         return $this;
     }
@@ -259,24 +305,28 @@ class Database
     public function set(...$columns)
     {
         $columns = implode(',', $columns);
+        $columns = $this->validateString($columns, '`SET` columns');
         $this->action .= ' SET '.$columns;
         return $this;
     }
 
     public function delete($table)
     {
+        $table = $this->validateString($table, '`DELETE FROM` table name');
         $this->action .= ' DELETE FROM '.$table;
         return $this;
     }
 
     public function loadDataInfile($file)
     {
+        $file = $this->validateString($file, '`LOAD DATA INFILE` file name');
         $this->action .= ' LOAD DATA INFILE '.$file;
         return $this;
     }
 
     public function characterSet($characterSet)
     {
+        $this->validateString($characterSet, 'Character set');
         $this->action .= ' CHARACTER SET '.$characterSet;
         return $this;
     }
@@ -321,35 +371,41 @@ class Database
 
     public function replace($table)
     {
+        $table = $this->validateString($table, '`REPLACE INTO` table name');
         $this->action .= ' REPLACE INTO '.$table;
         return $this;
     }
 
     public function leftJoin($tables)
     {
+        $tables = $this->validateString($tables, '`LEFT JOIN` table names');
         $this->action .= ' LEFT JOIN ('.$tables.')';
         return $this;
     }
 
     public function on($tables)
     {
+        $tables = $this->validateString($tables, '`ON` table names');
         $this->action .= ' ON ('.$tables.')';
         return $this;
     }
 
     public function truncate($table)
     {
+        $table = $this->validateString($table, '`TRUNCATE` table name');
         $this->action .= 'TRUNCATE TABLE '.$table;
         return $this;
     }
 
     public function mysqldump($file)
     {
+        $file = $this->validateString($file, '`mysqldump` file name');
         exec('mysqldump --user='.$this->username.' --password='.$this->password.' --host='.$this->host.' '.$this->dbName.' > '.$file);
     }
 
     public function backup($file)
     {
+        $file = $this->validateString($file, 'Backup file name');
         $this->mysqldump($file);
     }
 
@@ -363,6 +419,15 @@ class Database
         echo "UPDATE:\nUPDATE `table` SET `column1` = 'value1', `column2` = 'value2' WHERE `column1` = 'value1' ORDER BY `column2` LIMIT 2\n\n";
         echo "LEFT JOINT:\nSELECT `column` FROM `table1` LEFT JOIN (`table2`, `table3`) ON (`table2`.`column` = `table1`.`column` AND `table3`.`column` = `table1`.`column`)";
         echo '</pre><br/>';
+    }
+
+    private function validateString($string, $message)
+    {
+        if (is_string($string)) {
+            return $string;
+        } else {
+            throw new \Exception("$message must be a string.");
+        }
     }
 
 }
