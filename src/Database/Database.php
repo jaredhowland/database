@@ -37,7 +37,7 @@ class Database
      *
      * @param string $driver Optional. Defines the database driver to use. Default: `mysql`. Valid options: `mysql`, `sqlite`.
      *
-     * @throws Exception if an invalid driver is used.
+     * @throws \Exception if an invalid driver is used.
      *
      * @return $this
      */
@@ -56,7 +56,7 @@ class Database
      *
      * @param string $host Optional. Defines the database host name driver to use. Default: `localhost`.
      *
-     * @throws Exception if `$host` is not a string.
+     * @throws \Exception if `$host` is not a string.
      *
      * @return $this
      */
@@ -71,7 +71,7 @@ class Database
      *
      * @param int $port Optional. Defines the database port number to use. Default: `null`. Valid options: `null`, any integer from `0` to `1024` inclusive.
      *
-     * @throws Exception if an invalid port number is used.
+     * @throws \Exception if an invalid port number is used.
      *
      * @return $this
      */
@@ -90,7 +90,7 @@ class Database
      *
      * @param string $dbName Defines the database name to use.
      *
-     * @throws Exception if `$dbName` is not a string.
+     * @throws \Exception if `$dbName` is not a string.
      *
      * @return $this
      */
@@ -168,7 +168,7 @@ class Database
     private function createPdo()
     {
         if ($this->username AND $this->password AND $this->options) {
-            $this->db = new \PDO($this->dsn, $this->username, $this->password, $this-options);
+            $this->db = new \PDO($this->dsn, $this->username, $this->password, $this->options);
         } else if ($this->username AND $this->password) {
             $this->db = new \PDO($this->dsn, $this->username, $this->password);
         } else {
@@ -283,7 +283,7 @@ class Database
     public function values(...$values)
     {
         $values = implode(',', $values);
-        $values = $this->validateString($value, 'Values statement');
+        $values = $this->validateString($values, 'Values statement');
         $this->action .= ' VALUES ('.$values.')';
         return $this;
     }
