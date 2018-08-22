@@ -6,7 +6,7 @@ A simple PDO-wrapper for accessing MySQL and SQLite databases.
 
 Install with composer:
 
-`$ composer require jaredhowland/simple-pdo-wrapper:~1.0`
+`$ composer require jaredhowland/simple-pdo-wrapper:~2.0`
 
 # Examples
 
