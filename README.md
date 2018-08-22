@@ -99,7 +99,7 @@ $results = $db->select(`table1`.`column`)
 ## TRUNCATE
 
 ```
-$db->truncate('`table`')->execute();
+$db->truncate('`table`');
 ```
 
 ## mysqldump

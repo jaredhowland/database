@@ -4,8 +4,8 @@
     "homepage": "https://github.com/jaredhowland/database",
     "license": "MIT",
     "autoload": {
-        "psr-0": {
-            "Database" : "src"
+        "psr-4": {
+            "Database\\" : "src"
         }
     },
     "authors": [{
@@ -14,6 +14,7 @@
         "role": "developer"
     }],
     "require": {
-        "php": "^7.0"
+        "php": "^7.0",
+        "ext-PDO": "^7.1"
     }
 }
