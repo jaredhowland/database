@@ -3,13 +3,13 @@
  * Database wrapper for PDO
  *
  * @author  Jared Howland <database@jaredhowland.com>
- * @version 2018-08-22
+ * @version 2019-11-12
  * @since   2017-03-16
  */
 
 namespace Database;
 
-use Exception;
+use PDO;
 use RuntimeException;
 
 /**
@@ -42,17 +42,18 @@ class Database
      *                  integer from `0` to `1024` inclusive.
      *
      * @return object $this
-     * @throws Exception if an invalid port number is used.
+     *
+     * @throws RuntimeException if an invalid port number is used.
      */
     public function port($port = null)
     {
-        if (($port >= 0 && $port <= 1024) OR $port === null) {
+        if (($port >= 0 && $port <= 1024) || $port === null) {
             $this->port = $port;
 
             return $this;
-        } else {
-            throw new Exception('Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.');
         }
+
+        throw new RuntimeException('Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.');
     }
 
     /**
@@ -61,7 +62,6 @@ class Database
      * @param string $dbName Defines the database name to use.
      *
      * @return object $this
-     * @throws Exception if `$dbName` is not a string.
      */
     public function dbName($dbName)
     {
@@ -76,7 +76,6 @@ class Database
      * @param string $unixSocket Optional. Defines the Unix socket to use. Default: `null`.
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
      */
     public function unixSocket($unixSocket = null)
     {
@@ -91,7 +90,6 @@ class Database
      * @param string $charset Charset to use. Default: `utf8`
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
      */
     public function charset($charset = 'utf8')
     {
@@ -106,6 +104,7 @@ class Database
      * @param string $dbPath Path to SQLite database
      *
      * @return object $this
+     *
      * @throws RuntimeException if cannot connect to database
      */
     public function dbPath($dbPath)
@@ -114,9 +113,9 @@ class Database
             $this->dbPath = $dbPath;
 
             return $this;
-        } else {
-            throw new RuntimeException("You have entered an invalid path (`$dbPath`) to the database file.");
         }
+
+        throw new RuntimeException("You have entered an invalid path (`$dbPath`) to the database file.");
     }
 
     /**
@@ -125,7 +124,6 @@ class Database
      * @param string $username Username to connect to the database
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
      */
     public function username($username)
     {
@@ -140,7 +138,6 @@ class Database
      * @param string $password Password to connect to the database
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
      */
     public function password($password)
     {
@@ -155,7 +152,6 @@ class Database
      * @param string $options Options to use for connecting to database
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
      */
     public function options($options)
     {
@@ -168,7 +164,6 @@ class Database
      * Connect to the database
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
      */
     public function connect()
     {
@@ -215,7 +210,6 @@ class Database
      * @param string $host Optional. Defines the database host name driver to use. Default: `localhost`.
      *
      * @return object $this
-     * @throws Exception if `$host` is not a string.
      */
     public function host($host = 'localhost')
     {
@@ -228,8 +222,6 @@ class Database
      * Query string to run
      *
      * @param string $query Query string to run
-     *
-     * @throws Exception if query is invalid
      */
     public function query($query)
     {
@@ -253,7 +245,6 @@ class Database
      * @param string ...$columns Comma-delimited list of columns to `SELECT`
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function select(...$columns)
     {
@@ -270,7 +261,6 @@ class Database
      * @param string $table Table to run the query on
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function from($table)
     {
@@ -286,7 +276,6 @@ class Database
      * @param string $where `WHERE` statement in query
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function where($where)
     {
@@ -302,7 +291,6 @@ class Database
      * @param string ...$groupBy Comma-delimited list of columns to group the query by
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function groupBy(...$groupBy)
     {
@@ -319,7 +307,6 @@ class Database
      * @param array|string $orderBy Array for ordering by multiple columns or string for ordering by a single column
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function orderBy($orderBy)
     {
@@ -337,7 +324,6 @@ class Database
      *                      specifying an offset
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function limit($limit)
     {
@@ -370,7 +356,7 @@ class Database
      *
      * @return mixed Query results in the desired type
      */
-    public function fetch($type = \PDO::FETCH_ASSOC)
+    public function fetch($type = PDO::FETCH_ASSOC)
     {
         $db = $this->db->prepare($this->action);
         $db->execute($this->bind[0]);
@@ -387,7 +373,7 @@ class Database
      *
      * @return mixed Query results in the desired type
      */
-    public function fetchAll($type = \PDO::FETCH_ASSOC)
+    public function fetchAll($type = PDO::FETCH_ASSOC)
     {
         $db = $this->db->prepare($this->action);
         $db->execute($this->bind[0]);
@@ -403,7 +389,6 @@ class Database
      * @param string $table Name of table
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function insert($table)
     {
@@ -419,7 +404,6 @@ class Database
      * @param string $file File name/path to save the results to
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function intoOutfile($file)
     {
@@ -435,7 +419,6 @@ class Database
      * @param string ...$columns Comma-delimited list of columns
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function columns(...$columns)
     {
@@ -452,7 +435,6 @@ class Database
      * @param mixed ...$values Comma-delimited list of values
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function values(...$values)
     {
@@ -469,7 +451,6 @@ class Database
      * @param string $params Parameters to use when updating a duplicate key
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function onDuplicateKeyUpdate($params)
     {
@@ -485,7 +466,6 @@ class Database
      * @param string $table Table to update
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function update($table)
     {
@@ -501,7 +481,6 @@ class Database
      * @param mixed ...$columns Comma-delimited list of column values
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function set(...$columns)
     {
@@ -518,7 +497,6 @@ class Database
      * @param string $table Table name to delete row(s) from
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function delete($table)
     {
@@ -534,7 +512,6 @@ class Database
      * @param string $file File name/path to load into the database
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function loadDataInfile($file)
     {
@@ -550,7 +527,6 @@ class Database
      * @param string $characterSet Character set to use for the query
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function characterSet($characterSet)
     {
@@ -566,7 +542,6 @@ class Database
      * @param string $fieldsTerminatedBy String used to terminate fields
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function fieldsTerminatedBy($fieldsTerminatedBy)
     {
@@ -582,7 +557,6 @@ class Database
      * @param string $linesTerminatedBy String used to terminate a line
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function linesTerminatedBy($linesTerminatedBy)
     {
@@ -599,7 +573,6 @@ class Database
      * @param bool   $optionally Whether or not the `ENCLOSED BY` string is optional or not for the field
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function enclosedBy($enclosedBy, $optionally = false)
     {
@@ -616,7 +589,6 @@ class Database
      * @param string $escapedBy String used to escape fields
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function escapedBy($escapedBy)
     {
@@ -632,7 +604,6 @@ class Database
      * @param string $startingBy Prefix string used to start a new line you want to ignore
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function startingBy($startingBy)
     {
@@ -648,7 +619,6 @@ class Database
      * @param int $lines Number of lines to ignore
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function ignore($lines)
     {
@@ -664,7 +634,6 @@ class Database
      * @param string $table Table to replace the row in
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function replace($table)
     {
@@ -680,7 +649,6 @@ class Database
      * @param string $tables Table(s) to left join
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function leftJoin($tables)
     {
@@ -696,7 +664,6 @@ class Database
      * @param string $tables Table(s) to inner join
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function innerJoin($tables)
     {
@@ -712,7 +679,6 @@ class Database
      * @param string $tableValues Values used to join tables together
      *
      * @return object $this
-     * @throws Exception if query is invalid
      */
     public function on($tableValues)
     {
@@ -726,8 +692,6 @@ class Database
      * Truncate a table
      *
      * @param string $table Table to truncate
-     *
-     * @throws Exception if query is invalid
      */
     public function truncate($table)
     {
@@ -740,8 +704,6 @@ class Database
      * Dump the database to file to serve as a backup
      *
      * @param string $file File name/path to save the database to
-     *
-     * @throws Exception if query is invalid
      */
     public function backup($file)
     {
@@ -753,8 +715,6 @@ class Database
      * Dump the database to a file
      *
      * @param string $file File name/path to save the database to
-     *
-     * @throws Exception if query is invalid
      */
     public function mysqldump($file)
     {
@@ -785,17 +745,20 @@ class Database
      * @param bool   $allowNull Whether or not to allow a `null` string. Default: `false`
      *
      * @return string|null String if valid, `null` otherwise
-     * @throws Exception if `$string` is not a string
+     *
+     * @throws RuntimeException if `$string` is not a string
      */
     private function validateString($string, $message, $allowNull = false)
     {
         if (is_string($string)) {
             return $string;
-        } elseif ($allowNull === true) {
-            return null;
-        } else {
-            throw new Exception("$message must be a string.");
         }
+
+        if ($allowNull === true) {
+            return null;
+        }
+
+        throw new RuntimeException("$message must be a string.");
     }
 
     /**
@@ -806,17 +769,20 @@ class Database
      * @param bool   $allowNull Whether or not to allow a `null` integer. Default: `false`
      *
      * @return string|null Integer if valid, `null` otherwise
-     * @throws Exception if `$int` is not an integer
+     *
+     * @throws RuntimeException if `$int` is not an integer
      */
     private function validateInteger($int, $message, $allowNull = false)
     {
         if (is_int($int)) {
             return $int;
-        } elseif ($allowNull === true) {
-            return null;
-        } else {
-            throw new Exception("$message must be an integer.");
         }
+
+        if ($allowNull === true) {
+            return null;
+        }
+
+        throw new RuntimeException("$message must be an integer.");
     }
 
     /**
@@ -824,14 +790,12 @@ class Database
      */
     private function createPdo()
     {
-        if ($this->username AND $this->password AND $this->options) {
-            $this->db = new \PDO($this->dsn, $this->username, $this->password, $this->options);
+        if ($this->username && $this->password && $this->options) {
+            $this->db = new PDO($this->dsn, $this->username, $this->password, $this->options);
+        } elseif ($this->username && $this->password) {
+            $this->db = new PDO($this->dsn, $this->username, $this->password);
         } else {
-            if ($this->username AND $this->password) {
-                $this->db = new \PDO($this->dsn, $this->username, $this->password);
-            } else {
-                $this->db = new \PDO($this->dsn);
-            }
+            $this->db = new PDO($this->dsn);
         }
     }
 
