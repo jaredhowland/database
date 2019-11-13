@@ -3,7 +3,7 @@
  * Database wrapper for PDO
  *
  * @author  Jared Howland <database@jaredhowland.com>
- * @version 2019-11-12
+ * @version 2019-11-13
  * @since   2017-03-16
  */
 
@@ -653,7 +653,7 @@ class Database
     public function leftJoin($tables)
     {
         $tables       = $this->validateString($tables, '`LEFT JOIN` table names');
-        $this->action .= ' LEFT JOIN ('.$tables.')';
+        $this->action .= ' LEFT JOIN '.$tables;
 
         return $this;
     }
@@ -668,7 +668,7 @@ class Database
     public function innerJoin($tables)
     {
         $tables       = $this->validateString($tables, '`INNER JOIN` table names');
-        $this->action .= ' INNER JOIN ('.$tables.')';
+        $this->action .= ' INNER JOIN '.$tables;
 
         return $this;
     }
