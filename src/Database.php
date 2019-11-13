@@ -10,6 +10,7 @@
 namespace Database;
 
 use Exception;
+use RuntimeException;
 
 /**
  * Database class
@@ -45,12 +46,12 @@ class Database
      */
     public function port($port = null)
     {
-        if (($port >= 0 AND $port <= 1024) OR is_null($port)) {
+        if (($port >= 0 && $port <= 1024) OR $port === null) {
             $this->port = $port;
 
             return $this;
         } else {
-            throw new Exception("Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.");
+            throw new Exception('Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.');
         }
     }
 
@@ -105,16 +106,16 @@ class Database
      * @param string $dbPath Path to SQLite database
      *
      * @return object $this
-     * @throws Exception if cannot connect to database
+     * @throws RuntimeException if cannot connect to database
      */
     public function dbPath($dbPath)
     {
-        if (file_exists($dbPath) OR $dbPath == ':memory:') {
+        if ($dbPath === ':memory:' || file_exists($dbPath)) {
             $this->dbPath = $dbPath;
 
             return $this;
         } else {
-            throw new Exception("You have entered an invalid path (`$dbPath`) to the database file.");
+            throw new RuntimeException("You have entered an invalid path (`$dbPath`) to the database file.");
         }
     }
 
@@ -173,7 +174,7 @@ class Database
     {
         empty($this->driver) ? $this->driver() : $this->driver;
         empty($this->host) ? $this->host() : $this->host;
-        if ($this->driver == 'sqlite') {
+        if ($this->driver === 'sqlite') {
             $this->dsn = $this->driver.':'.$this->dbPath;
         } else {
             if ($this->unixSocket) {
@@ -195,17 +196,17 @@ class Database
      *                       `sqlite`.
      *
      * @return object $this
-     * @throws Exception if an invalid driver is used.
+     * @throws RuntimeException if an invalid driver is used.
      */
     public function driver($driver = 'mysql')
     {
-        if ($driver == 'mysql' OR $driver == 'sqlite') {
+        if ($driver === 'mysql' || $driver === 'sqlite') {
             $this->driver = $driver;
 
             return $this;
-        } else {
-            throw new Exception("This class only supports two drivers: `mysql` and `sqlite`");
         }
+
+        throw new RuntimeException('This class only supports two drivers: `mysql` and `sqlite`');
     }
 
     /**
@@ -685,6 +686,22 @@ class Database
     {
         $tables       = $this->validateString($tables, '`LEFT JOIN` table names');
         $this->action .= ' LEFT JOIN ('.$tables.')';
+
+        return $this;
+    }
+
+    /**
+     * Inner join table(s)
+     *
+     * @param string $tables Table(s) to inner join
+     *
+     * @return object $this
+     * @throws Exception if query is invalid
+     */
+    public function innerJoin($tables)
+    {
+        $tables       = $this->validateString($tables, '`INNER JOIN` table names');
+        $this->action .= ' INNER JOIN ('.$tables.')';
 
         return $this;
     }
