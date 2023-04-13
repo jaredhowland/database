@@ -3,7 +3,7 @@
  * Database wrapper for PDO
  *
  * @author  Jared Howland <database@jaredhowland.com>
- * @version 2019-11-13
+ * @version 2023-04-12
  * @since   2017-03-16
  */
 
@@ -251,6 +251,48 @@ class Database
         $columns      = implode(',', $columns);
         $columns      = $this->validateString($columns, '`SELECT` statement');
         $this->action .= ' SELECT '.$columns;
+
+        return $this;
+    }
+    
+    /**
+     * UNION Combines the result from multiple query blocks into a single result set
+     *
+     * @param null
+     *
+     * @return object $this
+     */
+    public function union()
+    {
+        $this->action .= ' UNION ';
+
+        return $this;
+    }
+    
+    /**
+     * UNION ALL Combines the result from multiple query blocks into a single result set
+     *
+     * @param null
+     *
+     * @return object $this
+     */
+    public function unionAll()
+    {
+        $this->action .= ' UNION ALL ';
+
+        return $this;
+    }
+    
+    /**
+     * UNION DISTINCT Combines the result from multiple query blocks into a single result set
+     *
+     * @param null
+     *
+     * @return object $this
+     */
+    public function unionDistinct()
+    {
+        $this->action .= ' UNION DISTINCT ';
 
         return $this;
     }
