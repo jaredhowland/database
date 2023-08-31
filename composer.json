@@ -3,18 +3,20 @@
     "description": "A simple PDO wrapper for accessing MySQL and SQLite databases.",
     "homepage": "https://github.com/jaredhowland/database",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Jared Howland",
+            "homepage": "https://www.jaredhowland.com",
+            "role": "developer"
+        }
+    ],
     "autoload": {
         "psr-4": {
-            "Database\\" : "src"
+            "Database\\": "src"
         }
     },
-    "authors": [{
-        "name": "Jared Howland",
-        "homepage": "http://jaredhowland.com",
-        "role": "developer"
-    }],
     "require": {
-        "php": "^7.0",
+        "php": "^8.2",
         "ext-PDO": "*"
     }
 }

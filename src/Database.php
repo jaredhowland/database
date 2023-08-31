@@ -3,7 +3,7 @@
  * Database wrapper for PDO
  *
  * @author  Jared Howland <database@jaredhowland.com>
- * @version 2019-11-13
+ * @version 2023-08-31
  * @since   2017-03-16
  */
 
@@ -38,14 +38,14 @@ class Database
     /**
      * Define the database port to use.
      *
-     * @param int $port Optional. Defines the database port number to use. Default: `null`. Valid options: `null`, any
-     *                  integer from `0` to `1024` inclusive.
+     * @param int|null $port Optional. Defines the database port number to use. Default: `null`. Valid options: `null`,
+     *                       any integer from `0` to `1024` inclusive.
      *
      * @return object $this
      *
      * @throws RuntimeException if an invalid port number is used.
      */
-    public function port($port = null)
+    public function port(int $port = null): object
     {
         if (($port >= 0 && $port <= 1024) || $port === null) {
             $this->port = $port;
@@ -53,7 +53,9 @@ class Database
             return $this;
         }
 
-        throw new RuntimeException('Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.');
+        throw new RuntimeException(
+            'Invalid port number. Must be `null` or an integer ranging between 0 and inclusive.'
+        );
     }
 
     /**
@@ -63,7 +65,7 @@ class Database
      *
      * @return object $this
      */
-    public function dbName($dbName)
+    public function dbName(string $dbName): object
     {
         $this->dbName = $this->validateString($dbName, 'Database name');
 
@@ -73,11 +75,11 @@ class Database
     /**
      * Define the Unix socket to use.
      *
-     * @param string $unixSocket Optional. Defines the Unix socket to use. Default: `null`.
+     * @param string|null $unixSocket Optional. Defines the Unix socket to use. Default: `null`.
      *
      * @return object $this
      */
-    public function unixSocket($unixSocket = null)
+    public function unixSocket(string $unixSocket = null): object
     {
         $this->unixSocket = $this->validateString($unixSocket, 'Unix socket');
 
@@ -91,7 +93,7 @@ class Database
      *
      * @return object $this
      */
-    public function charset($charset = 'utf8')
+    public function charset(string $charset = 'utf8'): object
     {
         $this->charset = $this->validateString($charset, 'charset');
 
@@ -107,7 +109,7 @@ class Database
      *
      * @throws RuntimeException if cannot connect to database
      */
-    public function dbPath($dbPath)
+    public function dbPath(string $dbPath): object
     {
         if ($dbPath === ':memory:' || file_exists($dbPath)) {
             $this->dbPath = $dbPath;
@@ -125,7 +127,7 @@ class Database
      *
      * @return object $this
      */
-    public function username($username)
+    public function username(string $username): object
     {
         $this->username = $this->validateString($username, 'Username');
 
@@ -139,7 +141,7 @@ class Database
      *
      * @return object $this
      */
-    public function password($password)
+    public function password(string $password): object
     {
         $this->password = $this->validateString($password, 'Password');
 
@@ -153,7 +155,7 @@ class Database
      *
      * @return object $this
      */
-    public function options($options)
+    public function options(string $options): object
     {
         $this->options = $this->validateString($options, 'Options');
 
@@ -165,19 +167,17 @@ class Database
      *
      * @return object $this
      */
-    public function connect()
+    public function connect(): object
     {
         empty($this->driver) ? $this->driver() : $this->driver;
         empty($this->host) ? $this->host() : $this->host;
         if ($this->driver === 'sqlite') {
             $this->dsn = $this->driver.':'.$this->dbPath;
+        } elseif ($this->unixSocket) {
+            $this->dsn = $this->driver.':unix_socket='.$this->unixSocket.'dbname='.$this->dbName;
         } else {
-            if ($this->unixSocket) {
-                $this->dsn = $this->driver.':unix_socket='.$this->unixSocket.'dbname='.$this->dbName;
-            } else {
-                $port      = empty($this->port) ? null : ';port='.$this->port;
-                $this->dsn = $this->driver.':host='.$this->host.$port.';dbname='.$this->dbName;
-            }
+            $port      = empty($this->port) ? null : ';port='.$this->port;
+            $this->dsn = $this->driver.':host='.$this->host.$port.';dbname='.$this->dbName;
         }
         $this->createPdo();
 
@@ -193,7 +193,7 @@ class Database
      * @return object $this
      * @throws RuntimeException if an invalid driver is used.
      */
-    public function driver($driver = 'mysql')
+    public function driver(string $driver = 'mysql'): object
     {
         if ($driver === 'mysql' || $driver === 'sqlite') {
             $this->driver = $driver;
@@ -211,7 +211,7 @@ class Database
      *
      * @return object $this
      */
-    public function host($host = 'localhost')
+    public function host(string $host = 'localhost'): object
     {
         $this->host = $this->validateString($host, 'Database host name');
 
@@ -223,19 +223,23 @@ class Database
      *
      * @param string $query Query string to run
      */
-    public function query($query)
+    public function query(string $query): void
     {
-        $this->action = $this->validateString($query, 'Query statement');
-        $this->execute();
+        $this->action = $this->validateString($query);
+        $db           = $this->db->prepare($this->action);
+        $db->exec();
+
+        $this->action = null;
     }
 
     /**
      * Execute the prepared statement
      */
-    public function execute()
+    public function execute(): void
     {
         $db = $this->db->prepare($this->action);
         $db->execute($this->bind[0]);
+
         $this->action = null;
     }
 
@@ -246,10 +250,10 @@ class Database
      *
      * @return object $this
      */
-    public function select(...$columns)
+    public function select(...$columns): object
     {
         $columns      = implode(',', $columns);
-        $columns      = $this->validateString($columns, '`SELECT` statement');
+        $columns = $this->validateString($columns);
         $this->action .= ' SELECT '.$columns;
 
         return $this;
@@ -262,9 +266,9 @@ class Database
      *
      * @return object $this
      */
-    public function from($table)
+    public function from(string $table): object
     {
-        $table        = $this->validateString($table, '`FROM` table name');
+        $table = $this->validateString($table);
         $this->action .= ' FROM '.$table;
 
         return $this;
@@ -277,9 +281,9 @@ class Database
      *
      * @return object $this
      */
-    public function where($where)
+    public function where(string $where): object
     {
-        $where        = $this->validateString($where, '`WHERE` statement');
+        $where = $this->validateString($where);
         $this->action .= ' WHERE '.$where;
 
         return $this;
@@ -292,10 +296,10 @@ class Database
      *
      * @return object $this
      */
-    public function groupBy(...$groupBy)
+    public function groupBy(...$groupBy): object
     {
         $groupBy      = implode(',', $groupBy);
-        $groupBy      = $this->validateString($groupBy, '`GROUP BY` statement');
+        $groupBy = $this->validateString($groupBy);
         $this->action .= ' GROUP BY '.$groupBy;
 
         return $this;
@@ -308,10 +312,10 @@ class Database
      *
      * @return object $this
      */
-    public function orderBy($orderBy)
+    public function orderBy($orderBy): object
     {
         $orderBy      = is_array($orderBy) ? implode(',', $orderBy) : $orderBy;
-        $orderBy      = $this->validateString($orderBy, '`ORDER BY` statement');
+        $orderBy = $this->validateString($orderBy);
         $this->action .= ' ORDER BY '.$orderBy;
 
         return $this;
@@ -325,9 +329,9 @@ class Database
      *
      * @return object $this
      */
-    public function limit($limit)
+    public function limit(string $limit): object
     {
-        $limit        = $this->validateString($limit, '`LIMIT` statement');
+        $limit = $this->validateString($limit);
         $this->action .= ' LIMIT '.$limit;
 
         return $this;
@@ -340,7 +344,7 @@ class Database
      *
      * @return object $this
      */
-    public function bind(...$bindArray)
+    public function bind(...$bindArray): object
     {
         foreach ($bindArray as $key => $value) {
             $this->bind[$key] = $value;
@@ -352,11 +356,11 @@ class Database
     /**
      * Fetch the query result(s)
      *
-     * @param int $type Type of results to return. Default: `\PDO::FETCH_ASSOC`.
+     * @param int $type Type of results to return. Default: `PDO::FETCH_ASSOC`.
      *
      * @return mixed Query results in the desired type
      */
-    public function fetch($type = PDO::FETCH_ASSOC)
+    public function fetch(int $type = PDO::FETCH_ASSOC): mixed
     {
         $db = $this->db->prepare($this->action);
         $db->execute($this->bind[0]);
@@ -367,13 +371,13 @@ class Database
     }
 
     /**
-     * Fetch all of the query result(s)
+     * Fetch all the query result(s)
      *
      * @param int $type Type of results to return. Default: `\PDO::FETCH_ASSOC`.
      *
      * @return mixed Query results in the desired type
      */
-    public function fetchAll($type = PDO::FETCH_ASSOC)
+    public function fetchAll(int $type = PDO::FETCH_ASSOC): mixed
     {
         $db = $this->db->prepare($this->action);
         $db->execute($this->bind[0]);
@@ -390,9 +394,9 @@ class Database
      *
      * @return object $this
      */
-    public function insert($table)
+    public function insert(string $table): object
     {
-        $table        = $this->validateString($table, '`INSERT` table name');
+        $table = $this->validateString($table);
         $this->action .= ' INSERT INTO '.$table;
 
         return $this;
@@ -405,9 +409,9 @@ class Database
      *
      * @return object $this
      */
-    public function intoOutfile($file)
+    public function intoOutfile(string $file): object
     {
-        $file         = $this->validateString($file, '`INTO OUTFILE` file name');
+        $file = $this->validateString($file);
         $this->action .= ' INTO OUTFILE '.$file;
 
         return $this;
@@ -420,10 +424,10 @@ class Database
      *
      * @return object $this
      */
-    public function columns(...$columns)
+    public function columns(...$columns): object
     {
         $columns      = implode(',', $columns);
-        $columns      = $this->validateString($columns, 'Column statement');
+        $columns = $this->validateString($columns);
         $this->action .= ' ('.$columns.')';
 
         return $this;
@@ -436,10 +440,10 @@ class Database
      *
      * @return object $this
      */
-    public function values(...$values)
+    public function values(...$values): object
     {
         $values       = implode(',', $values);
-        $values       = $this->validateString($values, 'Values statement', true);
+        $values = $this->validateString($values, true);
         $this->action .= ' VALUES ('.$values.')';
 
         return $this;
@@ -452,9 +456,9 @@ class Database
      *
      * @return object $this
      */
-    public function onDuplicateKeyUpdate($params)
+    public function onDuplicateKeyUpdate(string $params): object
     {
-        $params       = $this->validateString($params, '`ON DUPLICATE KEY UPDATE` parameters');
+        $params = $this->validateString($params);
         $this->action .= ' ON DUPLICATE KEY UPDATE '.$params;
 
         return $this;
@@ -467,9 +471,9 @@ class Database
      *
      * @return object $this
      */
-    public function update($table)
+    public function update(string $table): object
     {
-        $table        = $this->validateString($table, '`UPDATE` table name');
+        $table = $this->validateString($table);
         $this->action .= ' UPDATE '.$table;
 
         return $this;
@@ -482,10 +486,10 @@ class Database
      *
      * @return object $this
      */
-    public function set(...$columns)
+    public function set(...$columns): object
     {
         $columns      = implode(',', $columns);
-        $columns      = $this->validateString($columns, '`SET` columns');
+        $columns = $this->validateString($columns);
         $this->action .= ' SET '.$columns;
 
         return $this;
@@ -498,9 +502,9 @@ class Database
      *
      * @return object $this
      */
-    public function delete($table)
+    public function delete(string $table): object
     {
-        $table        = $this->validateString($table, '`DELETE FROM` table name');
+        $table = $this->validateString($table);
         $this->action .= ' DELETE FROM '.$table;
 
         return $this;
@@ -513,9 +517,9 @@ class Database
      *
      * @return object $this
      */
-    public function loadDataInfile($file)
+    public function loadDataInfile(string $file): object
     {
-        $file         = $this->validateString($file, '`LOAD DATA INFILE` file name');
+        $file = $this->validateString($file);
         $this->action .= ' LOAD DATA INFILE '.$file;
 
         return $this;
@@ -528,9 +532,9 @@ class Database
      *
      * @return object $this
      */
-    public function characterSet($characterSet)
+    public function characterSet(string $characterSet): object
     {
-        $this->validateString($characterSet, 'Character set');
+        $this->validateString($characterSet);
         $this->action .= ' CHARACTER SET '.$characterSet;
 
         return $this;
@@ -543,9 +547,9 @@ class Database
      *
      * @return object $this
      */
-    public function fieldsTerminatedBy($fieldsTerminatedBy)
+    public function fieldsTerminatedBy(string $fieldsTerminatedBy): object
     {
-        $this->validateString($fieldsTerminatedBy, '`FIELDS TERMINATED BY` string');
+        $this->validateString($fieldsTerminatedBy);
         $this->action .= ' FIELDS TERMINATED BY '.$fieldsTerminatedBy;
 
         return $this;
@@ -558,9 +562,9 @@ class Database
      *
      * @return object $this
      */
-    public function linesTerminatedBy($linesTerminatedBy)
+    public function linesTerminatedBy(string $linesTerminatedBy): object
     {
-        $this->validateString($linesTerminatedBy, '`LINES TERMINATED BY` string');
+        $this->validateString($linesTerminatedBy);
         $this->action .= ' LINES TERMINATED BY '.$linesTerminatedBy;
 
         return $this;
@@ -574,10 +578,10 @@ class Database
      *
      * @return object $this
      */
-    public function enclosedBy($enclosedBy, $optionally = false)
+    public function enclosedBy(string $enclosedBy, bool $optionally = false): object
     {
         $optionally = $optionally ? ' OPTIONALLY' : null;
-        $this->validateString($enclosedBy, '`ENCLOSED BY` string');
+        $this->validateString($enclosedBy);
         $this->action .= $optionally.' ENCLOSED BY '.$enclosedBy;
 
         return $this;
@@ -590,9 +594,9 @@ class Database
      *
      * @return object $this
      */
-    public function escapedBy($escapedBy)
+    public function escapedBy(string $escapedBy): object
     {
-        $this->validateString($escapedBy, '`ESCAPED BY` string');
+        $this->validateString($escapedBy);
         $this->action .= ' ESCAPED BY '.$escapedBy;
 
         return $this;
@@ -605,9 +609,9 @@ class Database
      *
      * @return object $this
      */
-    public function startingBy($startingBy)
+    public function startingBy(string $startingBy): object
     {
-        $this->validateString($startingBy, '`STARTING BY` string');
+        $this->validateString($startingBy);
         $this->action .= ' STARTING BY '.$startingBy;
 
         return $this;
@@ -620,9 +624,9 @@ class Database
      *
      * @return object $this
      */
-    public function ignore($lines)
+    public function ignore(int $lines): object
     {
-        $this->validateInteger($lines, '`IGNORE LINES` string');
+        $this->validateInteger($lines);
         $this->action .= ' IGNORE '.$lines.' LINES';
 
         return $this;
@@ -635,9 +639,9 @@ class Database
      *
      * @return object $this
      */
-    public function replace($table)
+    public function replace(string $table): object
     {
-        $table        = $this->validateString($table, '`REPLACE INTO` table name');
+        $table = $this->validateString($table);
         $this->action .= ' REPLACE INTO '.$table;
 
         return $this;
@@ -650,9 +654,9 @@ class Database
      *
      * @return object $this
      */
-    public function leftJoin($tables)
+    public function leftJoin(string $tables): object
     {
-        $tables       = $this->validateString($tables, '`LEFT JOIN` table names');
+        $tables = $this->validateString($tables);
         $this->action .= ' LEFT JOIN '.$tables;
 
         return $this;
@@ -665,9 +669,9 @@ class Database
      *
      * @return object $this
      */
-    public function innerJoin($tables)
+    public function innerJoin(string $tables): object
     {
-        $tables       = $this->validateString($tables, '`INNER JOIN` table names');
+        $tables = $this->validateString($tables);
         $this->action .= ' INNER JOIN '.$tables;
 
         return $this;
@@ -680,9 +684,9 @@ class Database
      *
      * @return object $this
      */
-    public function on($tableValues)
+    public function on(string $tableValues): object
     {
-        $tableValues  = $this->validateString($tableValues, '`ON` table names');
+        $tableValues = $this->validateString($tableValues);
         $this->action .= ' ON ('.$tableValues.')';
 
         return $this;
@@ -693,9 +697,9 @@ class Database
      *
      * @param string $table Table to truncate
      */
-    public function truncate($table)
+    public function truncate(string $table): void
     {
-        $table        = $this->validateString($table, '`TRUNCATE` table name');
+        $table = $this->validateString($table);
         $this->action .= 'TRUNCATE TABLE '.$table;
         $this->execute();
     }
@@ -705,9 +709,9 @@ class Database
      *
      * @param string $file File name/path to save the database to
      */
-    public function backup($file)
+    public function backup(string $file): void
     {
-        $file = $this->validateString($file, 'Backup file name');
+        $file = $this->validateString($file);
         $this->mysqldump($file);
     }
 
@@ -716,10 +720,12 @@ class Database
      *
      * @param string $file File name/path to save the database to
      */
-    public function mysqldump($file)
+    public function mysqldump(string $file): void
     {
-        $file = $this->validateString($file, '`mysqldump` file name');
-        exec('mysqldump --user='.$this->username.' --password='.$this->password.' --host='.$this->host.' '.$this->dbName.' > '.$file);
+        $file = $this->validateString($file);
+        exec(
+            'mysqldump --user='.$this->username.' --password='.$this->password.' --host='.$this->host.' '.$this->dbName.' > '.$file
+        );
     }
 
     /**
@@ -741,48 +747,34 @@ class Database
      * Validate the string
      *
      * @param string $string    String to validate
-     * @param string $message   Message to return if an exception is thrown
      * @param bool   $allowNull Whether or not to allow a `null` string. Default: `false`
      *
      * @return string|null String if valid, `null` otherwise
-     *
-     * @throws RuntimeException if `$string` is not a string
      */
-    private function validateString($string, $message, $allowNull = false)
+    private function validateString(string $string, bool $allowNull = false): ?string
     {
-        if (is_string($string)) {
-            return $string;
-        }
-
         if ($allowNull === true) {
             return null;
         }
 
-        throw new RuntimeException("$message must be a string.");
+        return $string;
     }
 
     /**
      * Validate the integer
      *
-     * @param int    $int       Integer to validate
-     * @param string $message   Message to return if an exception is thrown
-     * @param bool   $allowNull Whether or not to allow a `null` integer. Default: `false`
+     * @param int  $int       Integer to validate
+     * @param bool $allowNull Whether or not to allow a `null` integer. Default: `false`
      *
-     * @return string|null Integer if valid, `null` otherwise
-     *
-     * @throws RuntimeException if `$int` is not an integer
+     * @return int|null Integer if valid, `null` otherwise
      */
-    private function validateInteger($int, $message, $allowNull = false)
+    private function validateInteger(int $int, bool $allowNull = false): ?int
     {
-        if (is_int($int)) {
-            return $int;
-        }
-
         if ($allowNull === true) {
             return null;
         }
 
-        throw new RuntimeException("$message must be an integer.");
+        return $int;
     }
 
     /**
