@@ -225,8 +225,11 @@ class Database
      */
     public function query($query)
     {
-        $this->action = $this->validateString($query, 'Query statement');
-        $this->execute();
+        $this->action = $this->validateString($query);
+        $db = $this->db->prepare($this->action);
+        $db->exec();
+
+        $this->action = null;
     }
 
     /**
@@ -235,21 +238,9 @@ class Database
     public function execute()
     {
         $db = $this->db->prepare($this->action);
-        if (isset($this->bind)) {
-            $db->execute($this->bind[0]);
-        } else {
-            $db->exec();
-        }
+        $db->execute($this->bind[0]);
 
         $this->action = null;
-    }
-
-    /**
-     * Execute the prepared statement
-     */
-    public function exec()
-    {
-        $this->execute();
     }
 
     /**
