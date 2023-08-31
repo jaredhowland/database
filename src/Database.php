@@ -235,8 +235,21 @@ class Database
     public function execute()
     {
         $db = $this->db->prepare($this->action);
-        $db->execute($this->bind[0]);
+        if (isset($this->bind)) {
+            $db->execute($this->bind[0]);
+        } else {
+            $db->exec();
+        }
+
         $this->action = null;
+    }
+
+    /**
+     * Execute the prepared statement
+     */
+    public function exec()
+    {
+        $this->execute();
     }
 
     /**
