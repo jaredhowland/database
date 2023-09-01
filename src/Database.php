@@ -67,7 +67,7 @@ class Database
      */
     public function dbName(string $dbName): object
     {
-        $this->dbName = $this->validateString($dbName, 'Database name');
+        $this->dbName = $this->validateString($dbName);
 
         return $this;
     }
@@ -81,7 +81,7 @@ class Database
      */
     public function unixSocket(string $unixSocket = null): object
     {
-        $this->unixSocket = $this->validateString($unixSocket, 'Unix socket');
+        $this->unixSocket = $this->validateString($unixSocket);
 
         return $this;
     }
@@ -95,7 +95,7 @@ class Database
      */
     public function charset(string $charset = 'utf8'): object
     {
-        $this->charset = $this->validateString($charset, 'charset');
+        $this->charset = $this->validateString($charset);
 
         return $this;
     }
@@ -129,7 +129,7 @@ class Database
      */
     public function username(string $username): object
     {
-        $this->username = $this->validateString($username, 'Username');
+        $this->username = $this->validateString($username);
 
         return $this;
     }
@@ -143,7 +143,7 @@ class Database
      */
     public function password(string $password): object
     {
-        $this->password = $this->validateString($password, 'Password');
+        $this->password = $this->validateString($password);
 
         return $this;
     }
@@ -157,7 +157,7 @@ class Database
      */
     public function options(string $options): object
     {
-        $this->options = $this->validateString($options, 'Options');
+        $this->options = $this->validateString($options);
 
         return $this;
     }
@@ -213,7 +213,7 @@ class Database
      */
     public function host(string $host = 'localhost'): object
     {
-        $this->host = $this->validateString($host, 'Database host name');
+        $this->host = $this->validateString($host);
 
         return $this;
     }
