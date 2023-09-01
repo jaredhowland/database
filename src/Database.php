@@ -226,8 +226,7 @@ class Database
     public function query(string $query): void
     {
         $this->action = $this->validateString($query);
-        $db           = $this->db->prepare($this->action);
-        $db->exec();
+        $db           = $this->db->exec($this->action);
 
         $this->action = null;
     }
