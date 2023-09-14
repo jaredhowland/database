@@ -227,8 +227,10 @@ class Database
     {
         $this->action = $this->validateString($query);
         $db           = $this->db->exec($this->action);
-
         $this->action = null;
+        $this->result = $db->fetch($type);
+
+        return $this->result;
     }
 
     /**
