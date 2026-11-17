@@ -1,5 +1,5 @@
 {
-  "name": "jaredhowland/simple-pdo-wrapper",
+  "name": "jaredhowland/basic-database",
   "description": "A simple PDO wrapper for accessing MySQL and SQLite databases.",
   "homepage": "https://github.com/jaredhowland/database",
   "license": "MIT",
